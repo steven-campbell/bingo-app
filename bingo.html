@@ -1,0 +1,300 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            /*overflow: hidden;*/
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            height: calc(100vh - 20px);
+            width: 100%;
+            max-width: 650px;  /* Desktop max width */
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: clamp(1.5em, 5vw, 2.5em);
+            flex-shrink: 0;
+        }
+
+        .bingo-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: clamp(5px, 1.5vw, 10px);
+            flex: 1;
+            width: 100%;
+            max-width: min(90vh, 600px);
+            max-height: min(90vh, 800px);
+            margin: 0 auto;
+            aspect-ratio: 1;
+        }
+
+        .bingo-cell {
+            background: #f8f9fa;
+            border: 3px solid #dee2e6;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 5px;
+            font-size: clamp(0.6em, 2vw, 0.85em);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            word-wrap: break-word;
+            aspect-ratio: 1;
+        }
+
+        .bingo-cell:hover {
+            background: #e9ecef;
+            transform: scale(1.05);
+        }
+
+        .bingo-cell.marked {
+            background: #667eea;
+            color: white;
+            border-color: #5568d3;
+        }
+
+        .bingo-cell.free {
+            background: #28a745;
+            color: white;
+            border-color: #218838;
+            font-weight: bold;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-shrink: 0;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: clamp(0.9em, 2.5vw, 1em);
+            cursor: pointer;
+            transition: background 0.3s ease;
+            flex: 1;
+            max-width: 150px;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        .win-message {
+            text-align: center;
+            margin-top: 10px;
+            font-size: clamp(1.2em, 4vw, 1.5em);
+            color: #28a745;
+            font-weight: bold;
+            display: none;
+            flex-shrink: 0;
+        }
+
+        .win-message.show {
+            display: block;
+            animation: celebration 0.5s ease;
+        }
+
+        @keyframes celebration {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Mobile: full width */
+        @media (max-width: 768px) {
+            .container {
+                max-width: 100%;
+        }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 Bingo! 🎉</h1>
+        <div class="bingo-board" id="bingoBoard"></div>
+        <div class="buttons">
+            <button onclick="generateNewCard()">New Card</button>
+            <button onclick="resetCard()">Reset</button>
+        </div>
+        <div class="win-message" id="winMessage">🎊 BINGO! 🎊</div>
+    </div>
+
+    <script>
+        // Define your bingo phrases here
+        const bingoPhrases = [
+            "Kubernetes",
+            "Quadlets",
+            "CI/CD",
+            "Runners",
+            "VLAN",
+            "Offline Repo Mirror",
+            "bootc",
+            "VMWare",
+            "Pipeline",
+            "SBOM",
+            "Microservices",
+            "Infrastructure as Code",
+            "Cloud Native",
+            "Load Balancing",
+            "Zero Trust",
+            "Self-Healing",
+            "Immutability",
+            "Continuous ATO",
+            "Agile",
+            "Red Hat",
+            "Homelab",
+            "Story Points",
+            "Obsolescence",
+            "Migration",
+            "Jira",
+            "Air gapped",
+            "Tunneling",
+            "Virtualization",
+            "One-way dataflow",
+            "Go",
+            "SonarQube",
+            "Deployment Strategy",
+            "Backlog",
+            "Blockers",
+            "Pivot",
+            "Circle back",
+            "\"I had something but I forget right now\"",
+        ];
+
+        let currentCard = [];
+        let markedCells = new Set();
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function generateNewCard() {
+            const shuffled = shuffleArray(bingoPhrases);
+            currentCard = shuffled.slice(0, 24); // 24 phrases + 1 free space
+            markedCells.clear();
+            markedCells.add(12); // Mark the free space
+            renderBoard();
+            document.getElementById('winMessage').classList.remove('show');
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('bingoBoard');
+            board.innerHTML = '';
+
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'bingo-cell';
+
+                if (i === 12) {
+                    cell.textContent = 'CONTAINERS';
+                    cell.classList.add('free', 'marked');
+                } else {
+                    const phraseIndex = i < 12 ? i : i - 1;
+                    cell.textContent = currentCard[phraseIndex];
+
+                    if (markedCells.has(i)) {
+                        cell.classList.add('marked');
+                    }
+
+                    cell.onclick = () => toggleCell(i, cell);
+                }
+
+                board.appendChild(cell);
+            }
+        }
+
+        function toggleCell(index, cell) {
+            if (index === 12) return; // Can't toggle free space
+
+            if (markedCells.has(index)) {
+                markedCells.delete(index);
+                cell.classList.remove('marked');
+            } else {
+                markedCells.add(index);
+                cell.classList.add('marked');
+            }
+
+            checkWin();
+        }
+
+        function checkWin() {
+            const winPatterns = [
+                // Rows
+                [0, 1, 2, 3, 4],
+                [5, 6, 7, 8, 9],
+                [10, 11, 12, 13, 14],
+                [15, 16, 17, 18, 19],
+                [20, 21, 22, 23, 24],
+                // Columns
+                [0, 5, 10, 15, 20],
+                [1, 6, 11, 16, 21],
+                [2, 7, 12, 17, 22],
+                [3, 8, 13, 18, 23],
+                [4, 9, 14, 19, 24],
+                // Diagonals
+                [0, 6, 12, 18, 24],
+                [4, 8, 12, 16, 20]
+            ];
+
+            for (const pattern of winPatterns) {
+                if (pattern.every(index => markedCells.has(index))) {
+                    document.getElementById('winMessage').classList.add('show');
+                    return;
+                }
+            }
+
+            document.getElementById('winMessage').classList.remove('show');
+        }
+
+        function resetCard() {
+            markedCells.clear();
+            markedCells.add(12); // Keep free space marked
+            renderBoard();
+            document.getElementById('winMessage').classList.remove('show');
+        }
+
+        // Initialize the board on page load
+        generateNewCard();
+    </script>
+</body>
+</html>
