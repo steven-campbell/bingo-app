@@ -1,8 +1,0 @@
-name: bingo-app
-static_sites:
-- environment_slug: html
-  github:
-    branch: main
-    deploy_on_push: true
-    repo: steven-campbell/bingo-app
-  name: bingo-app
