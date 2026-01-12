@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bingo Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,7 +15,10 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: "Source Code Pro", 'Arial', sans-serif;
+            font-optical-sizing: auto;
+            font-weight: 400;
+            font-style: normal;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             /*overflow: hidden;*/
@@ -26,7 +32,7 @@
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            height: calc(100vh - 20px);
+            /*height: calc(100vh - 20px);*/
             width: 100%;
             max-width: 650px;  /* Desktop max width */
             display: flex;
@@ -37,7 +43,7 @@
         h1 {
             text-align: center;
             color: #333;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-size: clamp(1.5em, 5vw, 2.5em);
             flex-shrink: 0;
         }
@@ -120,12 +126,13 @@
             font-size: clamp(1.2em, 4vw, 1.5em);
             color: #28a745;
             font-weight: bold;
-            display: none;
+            visibility: hidden;
             flex-shrink: 0;
         }
 
         .win-message.show {
             display: block;
+            visibility: visible;
             animation: celebration 0.5s ease;
         }
 
